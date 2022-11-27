@@ -52,7 +52,7 @@ function brute_users() {
 		done
 		#i=$(($i + 1));
 		if [ "$badguy" == true ]; then
-			echo "oh shit we got a baddie and his name is ${user}"
+			echo "Potential bruteforce identified with username: ${user}"
 		fi 
 	done
 }
