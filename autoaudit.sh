@@ -56,7 +56,7 @@ function brute_users() {
 		fi 
 	done
 }
-
+#TODO:
 #Function that will check for zeroed out logs by entry level and dates
 #Add function that will check all usernames in btmp dump and compare them to usernames in /etc/password - could show bruteforcing of common creds
 	#if login is by tty1 - that means physical access and could suggest insider threat
