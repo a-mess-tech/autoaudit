@@ -59,12 +59,37 @@ function brute_users() {
 		fi 
 	done
 }
+
+function brute_by_time() {
+	#this function will identify bruteforce attempts in btmp by number of occurences within 10 minutes
+	#associative array in bash explantion: https://linuxhint.com/associative_array_bash/
+	#log_users is a list of all usernames logged in btmp
+	log_users=$(utmpdump /var/log/btmp | cut -d [ -f-3,5- | sed 's/[][]//g' | awk '{ print $3}')
+	#uniqueUsers is an associative array of the following structure: key=unique username found in btmp / value=number of times that user attempted to login
+	declare -A uniqueUsers
+	for user in ${log_users}; do
+		if [ ${uniqueUsers[${user}]+_} ]; then
+			uniqueUsers[${user}]=$((${uniqueUsers[${user}]}+1))
+			echo "match found. new value for ${user} is ${uniqueUsers[${user}]}"
+		else
+			uniqueUsers[${user}]=1
+			echo "array key added for ${user}"
+		fi
+	done
+	#conduct time analysis within this for loop
+	for uUser in "${!uniqueUsers[@]}"; do
+		#this command prints all the timestamps for each 
+		#use readarray to store each line as a variable and then conduct time analysis
+		echo "$(utmpdump /var/log/btmp | grep ${uUser} | cut -d [ -f-3,5- | sed 's/[][]//g' | awk '{ print $7 " " $8 " " $9 " " $10 " " $11 " " $12}')"
+	done
+}
+
 #TODO:
-#Function that will check for zeroed out logs by entry level and dates
-#Add function that will check all usernames in btmp dump and compare them to usernames in /etc/password - could show bruteforcing of common creds
+#Function that will check for zeroed out logs by entry level and dates - PROGRESS: sort of done?
+#Add function that will check all usernames in btmp dump and compare them to usernames in /etc/password - could show bruteforcing of common creds - PROGRESS: draft is done
 	#if login is by tty1 - that means physical access and could suggest insider threat
 #Add function that will search for bruteforce attempts in btmp by times (10 or more within 5 minutes)
-#Add function that will identify bad logins from commonly used IP addresses
+#Add function that will identify repeated bad logsin from the same IP addresses
 
 #Execution
 
@@ -104,6 +129,7 @@ while $RUNNING; do
    echo "btmp"
    option=none
    brute_users
+   brute_by_time
   ;;
   UTMP)
    echo "utmp"
