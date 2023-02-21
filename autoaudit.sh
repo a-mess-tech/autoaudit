@@ -21,6 +21,7 @@ function testall() {
 }
 
 function brute_users() {
+	#this function will compare users in /etc/passwd with users in /var/log/btmp - if a username has attempted to login multiple times but is not in /etc/passwd, this will alert
 	#pulls btmp users via utmpdump into variable "log_users"
 	log_users=$(utmpdump /var/log/btmp | cut -d [ -f-3,5- | sed 's/[][]//g' | awk '{ print $3}')
 	i=0
@@ -51,8 +52,10 @@ function brute_users() {
 			fi
 		done
 		#i=$(($i + 1));
+		#TO DO: Establish way to limit outputs to one per bad username
 		if [ "$badguy" == true ]; then
-			echo "Potential bruteforce identified with username: ${user}"
+			count=$(lastb | awk '{print $1}' | grep ${user} | wc -l)
+			echo "Username ${user} is not a registered user, but has attempted to login ${count} times."
 		fi 
 	done
 }
@@ -61,7 +64,7 @@ function brute_users() {
 #Add function that will check all usernames in btmp dump and compare them to usernames in /etc/password - could show bruteforcing of common creds
 	#if login is by tty1 - that means physical access and could suggest insider threat
 #Add function that will search for bruteforce attempts in btmp by times (10 or more within 5 minutes)
-
+#Add function that will identify bad logins from commonly used IP addresses
 
 #Execution
 
@@ -70,6 +73,7 @@ option=CHECK_ROOT
 while $RUNNING; do
  case $option in
   CHECK_ROOT)
+	#ensure user is root or running sudo
    if [[ "$EUID" -ne 0 ]]; then
 	echo "You must be root to use autoaudit."
 	option=none
