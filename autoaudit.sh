@@ -78,9 +78,17 @@ function brute_by_time() {
 	done
 	#conduct time analysis within this for loop
 	for uUser in "${!uniqueUsers[@]}"; do
+		flag_name=${uUser}_1
 		#this command prints all the timestamps for each 
 		#use readarray to store each line as a variable and then conduct time analysis
-		echo "$(utmpdump /var/log/btmp | grep ${uUser} | cut -d [ -f-3,5- | sed 's/[][]//g' | awk '{ print $7 " " $8 " " $9 " " $10 " " $11 " " $12}')"
+		#echo "$(utmpdump /var/log/btmp | grep ${uUser} | cut -d [ -f-3,5- | sed 's/[][]//g' | awk '{ print $7 " " $8 " " $9 " " $10 " " $11 " " $12}')"
+		utmpdump /var/log/btmp | grep ${uUser} | cut -d [ -f-3,5- | sed 's/[][]//g' | awk '{ print $7 " " $8 " " $9 " " $10 " " $11 " " $12}' | while IFS= read -r line; do
+			if [ "$line" == "Utmp dump of /var/log/btmp" ]; then
+				echo "nothing nothing nothing"
+			else
+				array_${uUser}+=( "$line" )
+			fi
+		done
 	done
 }
 
