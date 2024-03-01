@@ -119,7 +119,6 @@ function brute_users() {
 	output+=(**"Detecting bruteforce attempts by comparing /etc/passwd and /var/log/btmp**")
 	#this function compares users in /etc/passwd with users in /var/log/btmp - if a username has attempted to login multiple times but is not in /etc/passwd, this will alert
 	#pulls btmp users via utmpdump into variable "log_users"
-	# old query: utmpdump /var/log/btmp | cut -d [ -f-3,5- | sed 's/[][]//g' | awk '{ print $3}'
 	log_users=$(utmpdump /var/log/btmp | awk -F ']' '{ print $4 }' | sed 's/[][[:space:]]//g')
 	#while loop to define /etc/passwd users as arr_pusers
 	while IFS=: read -r p_user x x x x x x
@@ -202,15 +201,6 @@ function brute_by_time() {
 		done
 	done
 }
-
-#TODO:
-#Function that will check for zeroed out logs by entry level and dates - PROGRESS: DONE
-#Add function that will check all usernames in btmp dump and compare them to usernames in /etc/password - could show bruteforcing of common creds - PROGRESS: DONE
-	#if login is by tty1 - that means physical access and could suggest insider threat
-#Add function that will search for bruteforce attempts in btmp by times (x or more within y minutes) - DONE
-#Add function that will identify repeated abnormal pattern of life logins (ie, a user logs in from a certain IP address every day at the same time, but then logs in from a different IP address at a different time or telnet vs tty login)
-#Add a function that will detect abnormalities in timing of logins (ie, a login time is out of order compared to adjacent logs) - DONE
-
 
 ###################
 #####Execution#####
