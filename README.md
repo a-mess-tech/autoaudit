@@ -40,10 +40,11 @@ sudo ./autoaudit.sh
 chmod +x ./autoaudit.sh
 ~~~~
 3. Set the `LOG_FILES` and `IDENTITY_LOG_FILE` parameters in the first few lines of the script using your favorite text editor (*it's still vim!*)
-4. Set up your cron job with your desired evaluation module (1 - Log Tampering / 2 - Identity Attacks)
+4. Set up your root cron job with your desired evaluation module (1 - Log Tampering / 2 - Identity Attacks)
 ~~~~
 30 * * * * echo "1" | /home/kali/Desktop/autoaudit.sh > /home/kali/Desktop/test_output.txt 2>&1
 ~~~~
+5. Limit write permissions on autoaudit.sh (a best security practice)
 
 ## Detections
 
