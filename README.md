@@ -34,7 +34,9 @@ Autoaudit is capable of rapidly identifying identity attacks in the /var/log/btm
 
 1. Download Autoaudit
 2. Run the following to enable execution:
+~~~~
 > chmod +x ./autoaudit.sh
+~~~~
 3. Set the `LOG_FILES` and `IDENTITY_LOG_FILE` parameters in the first few lines of the script using your favorite text editor (*vim, duh!*)
     - The `LOG_FILES` variable establishes which files will be queried when evaluating log tampering. The `IDENTITY_LOG_FILE` variable will set which file will be queried when detecting identity attacks.
 4. Run as root
