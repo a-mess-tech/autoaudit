@@ -8,6 +8,10 @@ LOG_FILES=(
 	/var/log/btmp2
 )
 
+IDENTITY_LOG_FILE=(
+	/var/log/btmp2
+)
+
 
 ###################
 #####Functions#####
@@ -24,12 +28,9 @@ function tamper_zeroing() {
 		IFS=$'\n'
 		# for loop to process each line in "dump"
 		for line in $dump; do
-			# FIX THIS REGEX. DOENS'T MATCH ON DOUBLE DIGITS
 			first_check=$(echo "$line" | sed 's/[][]//g' | awk '{ print $1}' | grep -E '[^1-9]')
 			second_check=$(echo "$line" | sed 's/[][]//g' | awk '{ print $1}' | grep -E '.{2,}')
 			if [[ -n "$first_check" || -n "$second_check" ]]; then
-				# echo "The following logs may have been modified:"
-				# echo "$line"
 				output+=("The following logs in ${i} may have been modified (suspicious record type value):")
 				output+=("$line")
 				output+=("")
@@ -53,8 +54,6 @@ function tamper_erasure() {
 			num_erased=$(echo "$line" | grep -Eo '\[\s*\]' | wc -l)
 			if [[ $num_erased -gt $erasure_sensitivity_num ]]
 			then
-				# echo "The following logs may have been modified:"
-				# echo "$line"
 				output+=("The following logs in ${i} may have been modified (suspicious number of blank entries - $num_erased):")
 				output+=("$line")
 				output+=("")
@@ -73,8 +72,6 @@ function tamper_time() {
 		last_entry_time=$(date -d "${last_entry_time}" +%s)
 		#now compare the two times
 		if [[ $file_mod_time -ne $last_entry_time ]]; then
-			# echo "The following logs may have been modified:"
-			# echo "$i"
 			output+=("The log ${i} may have been modified (last entry time and file modification time do not match):")
 			output+=("Most recent entry time: $(date -d @${last_entry_time})")
 			output+=("File modification time: $(date -d @${file_mod_time})")
@@ -115,11 +112,10 @@ function tamper_datetimes() {
 ###Identity Attacks###
 
 function brute_users() {
-	# echo "**Detecting bruteforce attempts by comparing /etc/passwd and /var/log/btmp**"
-	output+=(**"Detecting bruteforce attempts by comparing /etc/passwd and /var/log/btmp**")
+	output+=(**"Detecting bruteforce attempts by comparing /etc/passwd and ${IDENTITY_LOG_FILE[0]}**")
 	#this function compares users in /etc/passwd with users in /var/log/btmp - if a username has attempted to login multiple times but is not in /etc/passwd, this will alert
 	#pulls btmp users via utmpdump into variable "log_users"
-	log_users=$(utmpdump /var/log/btmp | awk -F ']' '{ print $4 }' | sed 's/[][[:space:]]//g')
+	log_users=$(utmpdump ${IDENTITY_LOG_FILE[0]} | awk -F ']' '{ print $4 }' | sed 's/[][[:space:]]//g')
 	#while loop to define /etc/passwd users as arr_pusers
 	while IFS=: read -r p_user x x x x x x
 	do
@@ -142,10 +138,10 @@ function brute_users() {
 		#badguy variable will be true if no match between a user in btmp and /etc/passwd is found; the second if statement will only continue if the btmp user is not in the reported_users array (ie has not been reported/printed yet)
 		if [ "$badguy" == true ]; then
 			if [[ ! " ${reported_users[@]} " =~ " ${user} " ]]; then
-				count=$(utmpdump /var/log/btmp | awk -F ']' '{ print $4 }' | sed 's/[][[:space:]]//g' | grep ${user} | wc -l)
+				count=$(utmpdump ${IDENTITY_LOG_FILE[0]} | awk -F ']' '{ print $4 }' | sed 's/[][[:space:]]//g' | grep ${user} | wc -l)
 				if [ $count -gt 0 ]; then
-					# echo "Username ${user} is not a registered user, but has attempted to login ${count} times."
 					output+=("Username ${user} is not a registered user, but has attempted to login ${count} times.")
+					output+=("")
 				fi
 				reported_users+=("${user}")
 			fi
@@ -154,29 +150,25 @@ function brute_users() {
 }
 
 function brute_by_time() {
-	# echo "**Detecting bruteforce attempts by time analysis**"
 	output+=("**Detecting bruteforce attempts by time analysis**")
-	#this function will identify bruteforce attempts in btmp by number of occurences within 10 minutes
-	#associative array in bash explantion: https://linuxhint.com/associative_array_bash/
+	#this function will identify bruteforce attempts in btmp by number of occurences within X minutes
 	#log_users is a list of all usernames logged in btmp
-	log_users=$(utmpdump /var/log/btmp | awk -F ']' '{ print $4 }' | sed 's/[][[:space:]]//g')
+	log_users=$(utmpdump ${IDENTITY_LOG_FILE[0]} | awk -F ']' '{ print $4 }' | sed 's/[][[:space:]]//g')
 	#uniqueUsers is an associative array of the following structure: key=unique username found in btmp / value=number of times that user attempted to login
 	declare -A uniqueUsers
 	for user in ${log_users}; do
 		if [ ${uniqueUsers[${user}]+_} ]; then
 			uniqueUsers[${user}]=$((${uniqueUsers[${user}]}+1))
-			# echo "match found. new value for ${user} is ${uniqueUsers[${user}]}"
 		else
 			uniqueUsers[${user}]=1
-			# echo "array key added for ${user}"
 		fi
 	done
 	#conduct time analysis within this for loop
 	# a ! in front of an associative array returns the keys of the array
 	for uUser in "${!uniqueUsers[@]}"; do
 		#get timestamps of failed login attempts for the uUser in the for loop
-        timestamps=( $(utmpdump /var/log/btmp | grep ${uUser} | awk '{ print $NF }' | sed 's/[][[:space:]]//g' | while IFS= read -r line; do
-            if [ "$line" != "Utmp dump of /var/log/btmp" ]; then
+        timestamps=( $(utmpdump ${IDENTITY_LOG_FILE[0]} | grep ${uUser} | awk '{ print $NF }' | sed 's/[][[:space:]]//g' | while IFS= read -r line; do
+            if [ "$line" != "Utmp dump of ${IDENTITY_LOG_FILE[0]}" ]; then
 				echo $line
             fi
         done) )
@@ -192,10 +184,9 @@ function brute_by_time() {
 
 			# if the time difference is less than or equal to sens_num, print the identified attack
 			if (( end_time - start_time <= ${sens_time} )); then
-				# echo "Brute force attempt detected: User ${uUser} had at least ${sens_num} failed login attempts within $((sens_time/60)) minutes."
-				# echo "The failed logins were attempted between ${timestamps[$i]} and ${timestamps[$i+(${sens_num}-1)]}"
 				output+=("Brute force attempt detected: User ${uUser} had at least ${sens_num} failed login attempts within $((sens_time/60)) minutes.")
 				output+=("The failed logins were attempted between ${timestamps[$i]} and ${timestamps[$i+(${sens_num}-1)]}")
+				output+=("")
 				break
 			fi
 		done
@@ -221,19 +212,13 @@ while $RUNNING; do
   ;;
   SELECTION)
    output=()
-   echo "Which logs? 1=Identity Attacks 2=Log Tampering Attacks 3=utmp 4=wtmp"; read -t 10 choice
+   echo "Which logs? 1=Log Tampering Attacks 2=Identity Attacks"; read -t 10 choice
    if [[ "$choice" -eq 1 ]];
    then
-	option=IDENTITY
+	option=TAMPER
    elif [[ choice -eq 2 ]];
    then
-	option=TAMPER
-   elif [[ choice -eq 3 ]];
-   then
-	option=UTMP
-   elif [[ choice -eq 4 ]];
-   then
-	option=WTMP
+	option=IDENTITY
    else
 	echo "Please select an appropriate option next time."
    fi
@@ -243,14 +228,6 @@ while $RUNNING; do
    brute_by_time
    output=("****Analyzing Logs for Identity Attacks****" "" "${output[@]}")
    option=RESULTS
-  ;;
-  UTMP)
-   echo "utmp"
-   option=SELECTION
-  ;;
-  WTMP)
-   echo "wtmp"
-   option=SELECTION
   ;;
   TAMPER)
    tamper_zeroing
@@ -273,7 +250,7 @@ while $RUNNING; do
   ;;
   *)
    echo ""
-   echo "Thanks for using Autoaudit!"
+#    echo "Thanks for using Autoaudit!"
    sleep 5 
    exit 0 
   ;;
