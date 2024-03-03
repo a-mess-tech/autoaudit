@@ -2,13 +2,54 @@
 
 ## Introduction
 
-Autoaudit is a Unix forensics investigation tool to identify evidence of log tampering and identity attacks in the /var/log/wtmp, /var/log/btmp, and /var/run/utmp logs. Autoaudit is designed to be lightweight, extensible, and intuitive - written in Bash, it can run natively on any Unix system without dependencies. Finally, it can easily be run as a recurring cron job and configured to regularly send analysis results to a continuous monitoring solution or alert when anomalous activity is detected.
+Autoaudit is a Unix forensics investigation tool to identify evidence of log tampering and identity attacks in the /var/log/wtmp, /var/log/btmp, and /var/run/utmp logs.
+
+### Features
+
+- Lightweight - written in Bash with no dependencies or other downloads
+- Intuitive - simple to set up, simple to execute
+- Comprehensive - detects a variety of attacks
+- Fast - cuts down on forensic analysis time by rapidly combing through any number or combination of *tmp logs 
+- Extensible - can be ran singularly for one-time analysis on logs or configured for continuous monitoring with cron
+
+## How to Use
+
+### Step-by-Step Instructions
+
+#### Singular Execution
+
+1. Download Autoaudit
+2. Run the following to enable execution:
+~~~~
+chmod +x ./autoaudit.sh
+~~~~
+3. Set the `LOG_FILES` and `IDENTITY_LOG_FILE` parameters in the first few lines of the script using your favorite text editor (*vim, duh!*)
+    - The `LOG_FILES` variable establishes which files will be queried when evaluating log tampering. The `IDENTITY_LOG_FILE` variable will set which file will be queried when detecting identity attacks.
+4. Run as root
+~~~~
+sudo ./autoaudit.sh
+~~~~
+5. Select which variety of attack you'd like to evaluate (1 - Log Tampering / 2 - Identity Attacks)
+6. View or save Autoaudit ouptut
+
+#### Continuous Monitoring with Cron
+
+1. Download Autoaudit
+2. Run the following to enable execution:
+~~~~
+chmod +x ./autoaudit.sh
+~~~~
+3. Set the `LOG_FILES` and `IDENTITY_LOG_FILE` parameters in the first few lines of the script using your favorite text editor (*it's still vim!*)
+4. Set up your cron job with your desired evaluation module (1 - Log Tampering / 2 - Identity Attacks)
+~~~~
+30 * * * * echo "1" | /home/kali/Desktop/autoaudit.sh > /home/kali/Desktop/test_output.txt 2>&1
+~~~~
 
 ## Detections
 
 Autoaudit will identify a variety of log tampering and identity attack indicators. This makes it a powerful tool for rapid analysis of the *tmp logs for forensic investigations. Here are the different indicators it's designed ot detect.
 
-**** Log Tampering
+#### Log Tampering
 
 - **Abnormal Record Types** - this function detects zeroed out logs by checking the record type (first column) in all input log sources. If an adversary conducted a log tampering attempt that zeroed out all fields of a log, the record type would be set to zero. Additionally, if an adversary attempted to manipulate the record type with any non-standard value, this function would alert.
 
@@ -20,38 +61,12 @@ Autoaudit will identify a variety of log tampering and identity attack indicator
 
 #### Identity Attacks
 
-Autoaudit is capable of rapidly identifying identity attacks in the /var/log/btmp logs.
+Autoaudit is capable of rapidly identifying identity attacks in the `/var/log/btmp` log set.
 
 - **Bruteforce Detection by User** - this function detects bruteforce or login attempts by users that are not registered on the system. It compares all failed logins with users found in /etc/passwd and identifies any attempted logins by users who are not registered on the system. This is useful to rapidly identify if credential stuffing or bruteforce attacks are being attempted on a system and their prevalence. 
 
 - **Bruteforce by Time** - this function detects bruteforce or login attempts based on time entries. With sensitivity variables that can be defined by an admin (sens_num and sens_time), the function will identify suspicious numbers of failed logins within a certain time period. This is effective for rapidly identifying credential stuffing or bruteforce attacks. 
 
-## How to Use
-
-### Step-by-Step Instructions
-
-#### Singular Execution
-
-1. Download Autoaudit
-2. Run the following to enable execution:
-~~~~
-> chmod +x ./autoaudit.sh
-~~~~
-3. Set the `LOG_FILES` and `IDENTITY_LOG_FILE` parameters in the first few lines of the script using your favorite text editor (*vim, duh!*)
-    - The `LOG_FILES` variable establishes which files will be queried when evaluating log tampering. The `IDENTITY_LOG_FILE` variable will set which file will be queried when detecting identity attacks.
-4. Run as root
-> sudo ./autoaudit.sh
-5. Select which variety of attack you'd like to evaluate (1 - Log Tampering / 2 - Identity Attacks)
-6. View or save Autoaudit ouptut
-
-#### Continuous Monitoring with Cron
-
-1. Download Autoaudit
-2. Run the following to enable execution:
-> chmod +x ./autoaudit.sh
-3. Set the `LOG_FILES` and `IDENTITY_LOG_FILE` parameters in the first few lines of the script using your favorite text editor (*it's still vim!*)
-4. Set up your cron job with your desired evaluation module (1 - Log Tampering / 2 - Identity Attacks)
-> 30 * * * * echo "1" | /home/kali/Desktop/autoaudit.sh > /home/kali/Desktop/test_output.txt 2>&1
 
 
 
