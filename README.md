@@ -48,7 +48,7 @@ chmod +x ./autoaudit.sh
 
 ## Detections
 
-Autoaudit will identify a variety of log tampering and identity attack indicators. This makes it a powerful tool for rapid analysis of the *tmp logs for forensic investigations. Here are the different indicators it's designed ot detect.
+Autoaudit will identify a variety of log tampering and identity attack indicators. This makes it a powerful tool for rapid analysis of the *tmp logs for forensic investigations. Here are the different indicators it's designed to detect.
 
 #### Log Tampering
 
