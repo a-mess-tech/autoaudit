@@ -4,12 +4,12 @@
 
 LOG_FILES=(
 	/var/run/utmp
-	/var/log/wtmp2
-	/var/log/btmp2
+	/var/log/wtmp
+	/var/log/btmp
 )
 
 IDENTITY_LOG_FILE=(
-	/var/log/btmp2
+	/var/log/btmp
 )
 
 
