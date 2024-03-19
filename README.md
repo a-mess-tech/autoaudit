@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Autoaudit is a Unix forensics investigation tool to identify evidence of log tampering and identity attacks in the /var/log/wtmp, /var/log/btmp, and /var/run/utmp logs.
+Autoaudit is a Linux forensics investigation tool to identify evidence of log tampering and identity attacks in the /var/log/wtmp, /var/log/btmp, and /var/run/utmp logs.
 
 ### Features
 
@@ -56,7 +56,7 @@ Autoaudit will identify a variety of log tampering and identity attack indicator
 
 - **Log Erasure** - this function identifies emptied fields in the *tmp logs beyond a normal threshold (which can be adjusted by the user). An adversary may use hexedit or utmpdump -r to erase all fields within a log entry but not erase the entry itself. This function will alert when it identifies an anomalous number of empty fields in a log entry.
 
-- **Timestamp Manipulation** - this function detects manipulated and discontinuous timestamps in a log. The function compares all timestamps in the log and identifies if any are out of order - indicating potential log manipulation. An adversary may manipulate a logged event but not completely remove it in order to evade detection. This function will alert if it identifies a timestamp that has been manipulated and is now inconsistent with other entry timestamps. Additionally, this function will detect if a timestamp has been zeroed out (reset to epoch time in Unix - 1970-01-01 00:00:00). 
+- **Timestamp Manipulation** - this function detects manipulated and discontinuous timestamps in a log. The function compares all timestamps in the log and identifies if any are out of order - indicating potential log manipulation. An adversary may manipulate a logged event but not completely remove it in order to evade detection. This function will alert if it identifies a timestamp that has been manipulated and is now inconsistent with other entry timestamps. Additionally, this function will detect if a timestamp has been zeroed out (reset to epoch time in Linux - 1970-01-01 00:00:00). 
 
 - **General File Manipulation** - this function detects discrepancies between the most recent entry time and file modification time. If an adversary were to manipulate a file with utmpdump -r or hexedit, then the file modification time would not match up with the most recent entry in the log. Outside of tampering, the file modification time will always match with the most recent log entry. This function will alert if the two timestamps are not equivalent.
 
